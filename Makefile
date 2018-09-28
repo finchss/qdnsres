@@ -1,4 +1,3 @@
 CC=clang
-all:qdnsres
-qdnsres: qdnsres.c
+all:
 	$(CC) qdnsres.c -o qdnsres -Wall  -lpthread

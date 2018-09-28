@@ -106,8 +106,20 @@ void *ResolveAddressThread(void *argc){
 
 	if (0 != rc || NULL == result) {
 		memset(&el->DstIp,0,4);
-	} else 
-		memcpy(&el->DstIp,result->h_addr_list[0],4);
+	} else {
+		int i=0; 
+		while(result->h_addr_list[i]!=NULL){
+			memcpy(&el->DstIp,result->h_addr_list[i],4);	
+			printf("%s:%s\n",el->hostname,inet_ntoa(el->DstIp));	
+			i++;
+
+		}
+		
+
+		//
+	}
+
+//	printf("%s:%s\n",el->hostname,inet_ntoa(el->DstIp));
 	free(buf);
 	return NULL;
 }
