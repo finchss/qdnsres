@@ -33,8 +33,7 @@ typedef struct el {
 
 
 pthread_t ThreadsResolve[1000];
-void explode(const char *src, const char *tokens, char ***list, size_t *len)
-{
+void explode(const char *src, const char *tokens, char ***list, size_t *len) {
 	if(src == NULL || list == NULL || len == NULL)
 		return;
 
@@ -60,8 +59,7 @@ void explode(const char *src, const char *tokens, char ***list, size_t *len)
 	(*len)++;
 
 
-	while((str = strtok(NULL, tokens)))
-	{
+	while((str = strtok(NULL, tokens))) {
 		tmp = realloc(_list, (sizeof *_list) * (*len + 1));
 		if(tmp == NULL)
 			goto free_and_exit;
@@ -81,7 +79,7 @@ free_and_exit:
 }
 
 
-void *ResolveAddressThread(void *argc){
+void *ResolveAddressThread(void *argc) {
 
 	el *el=argc;
 	int buflen=2048;
@@ -98,25 +96,20 @@ void *ResolveAddressThread(void *argc){
 		if (NULL == tmp) {
 			free(buf);
 			perror("realloc");
-		}
-		else{
+		} else {
 			buf = tmp;
 		}
-	}	
+	}
 
 	if (0 != rc || NULL == result) {
 		memset(&el->DstIp,0,4);
 	} else {
-		int i=0; 
-		while(result->h_addr_list[i]!=NULL){
-			memcpy(&el->DstIp,result->h_addr_list[i],4);	
-			printf("%s:%s\n",el->hostname,inet_ntoa(el->DstIp));	
+		int i=0;
+		while(result->h_addr_list[i]!=NULL) {
+			memcpy(&el->DstIp,result->h_addr_list[i],4);
+			printf("%s:%s\n",el->hostname,inet_ntoa(el->DstIp));
 			i++;
-
 		}
-		
-
-		//
 	}
 
 //	printf("%s:%s\n",el->hostname,inet_ntoa(el->DstIp));
@@ -124,31 +117,48 @@ void *ResolveAddressThread(void *argc){
 	return NULL;
 }
 
-void ResolveAddresses(el *head){
+void ResolveAddresses(el *head) {
 
 	int t=0,i=0;
 	el *el;
 	void *status;
 
-	CDL_FOREACH(head,el){
+	CDL_FOREACH(head,el) {
 		pthread_create(&ThreadsResolve[t],NULL,ResolveAddressThread,(void *)el);
 		t++;
 	}
-	for(i=0;i<t;i++)  pthread_join(ThreadsResolve[i],&status);
+	for(i=0; i<t; i++)
+		pthread_join(ThreadsResolve[i],&status);
 }
 
-int main (int argc, char **argv){
+int main (int argc, char **argv) {
 
 	el *NewDst=NULL,*Head=NULL;
 	char **explode_list;
 	size_t explode_len;
+	char *c;
 	int i,j;
+	char b[1024];
 
-	explode(argv[1], ",", &explode_list, &explode_len);
-	for(j = 0; j < explode_len; ++j) {
-		NewDst= (el*)malloc(sizeof(el));
-		strcpy(NewDst->hostname,explode_list[j]);
-		CDL_APPEND(Head, NewDst);
+	if (argc==2) {
+		explode(argv[1], ",", &explode_list, &explode_len);
+		for(j = 0; j < explode_len; ++j) {
+			NewDst= (el*)malloc(sizeof(el));
+			strcpy(NewDst->hostname,explode_list[j]);
+			CDL_APPEND(Head, NewDst);
+		}
+	} else {
+		memset(b,0,sizeof(b));
+		while( fgets(b, sizeof(b), stdin) ) {
+			c=strchr(b,'\n');
+			if(c!=NULL)
+				*c='\0';
+			NewDst= (el*)malloc(sizeof(el));
+			strcpy(NewDst->hostname,b);
+			CDL_APPEND(Head, NewDst);
+			memset(b,0,sizeof(b));
+		}
 	}
-	ResolveAddresses(Head); 
+
+	ResolveAddresses(Head);
 }
